@@ -17,7 +17,8 @@ public class AddPageBook extends JFrame {
        private JTextField totalCostField;
        private JTextField dateOfPublicationField;
        private JButton backButton;
-       private JButton submitButton;
+       private JButton submitButton, deleteButton, updateButton;
+       private JComboBox<String> modeDropdown;
 
        // Custom colors
        private final Color PRIMARY_COLOR = new Color(41, 128, 185); // Blue
@@ -59,14 +60,23 @@ public class AddPageBook extends JFrame {
        }
 
        private JPanel createTitlePanel() {
-              JPanel titlePanel = new JPanel();
+              JPanel titlePanel = new JPanel(new BorderLayout());
               titlePanel.setBackground(BACKGROUND_COLOR);
 
-              JLabel titleLabel = new JLabel("Add New Book");
+              // Title label
+              JLabel titleLabel = new JLabel("Book Management");
               titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
               titleLabel.setForeground(SECONDARY_COLOR);
 
-              titlePanel.add(titleLabel);
+              // Dropdown for mode selection
+              modeDropdown = new JComboBox<>(new String[] { "Add Mode", "Update Mode" });
+              modeDropdown.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+              modeDropdown.setPreferredSize(new Dimension(150, 30));
+              modeDropdown.setBackground(FIELD_BACKGROUND);
+              modeDropdown.setForeground(SECONDARY_COLOR);
+              titlePanel.add(titleLabel, BorderLayout.WEST);
+              titlePanel.add(modeDropdown, BorderLayout.EAST);
+
               return titlePanel;
        }
 
@@ -176,12 +186,17 @@ public class AddPageBook extends JFrame {
 
               backButton = new JButton("Back");
               submitButton = new JButton("Submit");
+              deleteButton = new JButton("Delete");
+              updateButton = new JButton("Update");
 
               styleButton(backButton, PRIMARY_COLOR);
               styleButton(submitButton, new Color(46, 204, 113)); // Green color for submit
-
+              styleButton(deleteButton, PRIMARY_COLOR);
+              styleButton(updateButton, PRIMARY_COLOR);
               buttonPanel.add(backButton);
               buttonPanel.add(submitButton);
+              buttonPanel.add(deleteButton);
+              buttonPanel.add(updateButton);
 
               return buttonPanel;
        }
@@ -232,10 +247,19 @@ public class AddPageBook extends JFrame {
               controller.setTotalQuantityField(totalQuantityField);
               controller.setTotalCostField(totalCostField);
               controller.setDateOfPublicationField(dateOfPublicationField);
+              controller.setModeDropdown(modeDropdown);
+              controller.setDeleteButton(deleteButton);
+              controller.setUpdateButton(updateButton);
+              deleteButton.addActionListener(controller);
+              updateButton.addActionListener(controller);
+              JTable table = GenerateListBooks.getTable();
+              controller.setViewBookTable(table);
+              table.addMouseListener(controller);
 
               // Add action listeners
               backButton.addActionListener(controller);
               submitButton.addActionListener(controller);
+              modeDropdown.addItemListener(controller);
 
               // Add document listeners for real-time validation
               priceOfBookField.getDocument().addDocumentListener(controller);

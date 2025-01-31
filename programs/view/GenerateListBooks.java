@@ -14,6 +14,10 @@ public class GenerateListBooks {
        private static DefaultTableModel model;
        private static ListPageCtrl ctrl;
 
+       public static JTable getTable() {
+              return table;
+       }
+
        public static JPanel generateViewPanel(JFrame frame) {
               // Create a panel with BorderLayout
               JPanel panel = new JPanel(new BorderLayout());
@@ -45,7 +49,7 @@ public class GenerateListBooks {
               JScrollPane scrollPane = new JScrollPane(table);
               panel.add(scrollPane, BorderLayout.CENTER);
               ctrl = new ListPageCtrl(frame, model);
-              // reloadData();
+              reloadData();
 
               return panel;
        }

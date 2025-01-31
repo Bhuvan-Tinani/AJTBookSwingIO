@@ -20,7 +20,7 @@ public class Validation {
        }
 
        public static String dateFormatString(Date date) {
-              SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+              SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyy");
               String formattedDate = dateFormat.format(date);
               return formattedDate;
        }

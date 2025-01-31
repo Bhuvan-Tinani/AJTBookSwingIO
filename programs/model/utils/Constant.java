@@ -108,4 +108,14 @@ public class Constant {
               return books;
        }
 
+       public static List<Book> updateBooks(List<Book> books, Book book) {
+              for (int i = 0; i < books.size(); i++) {
+                     if (books.get(i).getBookId().equals(book.getBookId())) {
+                            books.set(i, book);
+                            break;
+                     }
+              }
+              return books;
+       }
+
 }

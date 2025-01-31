@@ -14,13 +14,30 @@ import com.book.view.HomePageBook;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 
-public class AddPageCtrl implements ActionListener, DocumentListener {
+public class AddPageCtrl implements ActionListener, DocumentListener, ItemListener, MouseListener {
        private JFrame addPageFrame;
        private JTextField bookIdField;
-       private JButton backButton, submitBtn;
+       private JButton backButton, submitBtn, deleteButton, updateButton;
+
+       public void setDeleteButton(JButton deleteButton) {
+              this.deleteButton = deleteButton;
+              deleteButton.setVisible(false);
+       }
+
+       public void setUpdateButton(JButton updateButton) {
+              this.updateButton = updateButton;
+              deleteButton.setVisible(false);
+       }
+
        private JTextField bookNameField;
        private JTextField authorNamesField;
        private JTextField publicationField;
@@ -28,6 +45,18 @@ public class AddPageCtrl implements ActionListener, DocumentListener {
        private JTextField totalQuantityField;
        private JTextField totalCostField;
        private JTextField dateOfPublicationField;
+       private JComboBox<String> modeDropdown;
+       private JTable viewBookTable;
+       Book book;
+
+       public void setViewBookTable(JTable viewBookTable) {
+              this.viewBookTable = viewBookTable;
+       }
+
+       public void setModeDropdown(JComboBox<String> modeDropdown) {
+              this.modeDropdown = modeDropdown;
+       }
+
        private BookIoOperation bookIoOperation;
 
        public JTextField getDateOfPublicationField() {
@@ -145,10 +174,51 @@ public class AddPageCtrl implements ActionListener, DocumentListener {
                             saveData();
                             // Constant.showMessage("Book added successfully", addPageFrame);
                      }
+              } else if (e.getSource() == deleteButton) {
+                     if (areFieldsValid()) {
+                            deleteBook();
+                     }
+              } else if (e.getSource() == updateButton) {
+                     if (areFieldsValid()) {
+                            updateBook();
+                     }
               }
        }
 
-       private void saveData() {
+       private void updateBook() {
+              getBookData();
+              List<Book> books = bookIoOperation.getBooks();
+              if (this.book != null && books.size() > 0) {
+                     books = Constant.updateBooks(books, book);
+                     try {
+                            bookIoOperation.writeBooks(books);
+                            clearData();
+                            modeDropdown.setSelectedIndex(0);
+                            GenerateListBooks.reloadData();
+                            Constant.showMessage("Book updated successfully", addPageFrame);
+                     } catch (IOException e) {
+                            Constant.showMessage("Error deleting the book: " + e.getMessage(), addPageFrame);
+                     }
+              }
+       }
+
+       private void deleteBook() {
+              List<Book> books = bookIoOperation.getBooks();
+              if (this.book != null && books.size() > 0) {
+                     books = Constant.deleteBook(books, book);
+                     try {
+                            bookIoOperation.writeBooks(books);
+                            clearData();
+                            modeDropdown.setSelectedIndex(0);
+                            GenerateListBooks.reloadData();
+                            Constant.showMessage("Book deleted successfully", addPageFrame);
+                     } catch (IOException e) {
+                            Constant.showMessage("Error deleting the book: " + e.getMessage(), addPageFrame);
+                     }
+              }
+       }
+
+       private void getBookData() {
               try {
                      String bookId = bookIdField.getText().trim();
                      String bookName = bookNameField.getText().trim();
@@ -162,6 +232,16 @@ public class AddPageCtrl implements ActionListener, DocumentListener {
 
                      Book book = new Book(bookId, bookName, authorNames, publication, priceOfBook, totalQuantityToOrder,
                                    totalCost, dateOfPublication);
+                     this.book = book;
+              } catch (ParseException e) {
+                     Constant.showMessage(e.getMessage(), addPageFrame);
+              }
+
+       }
+
+       private void saveData() {
+              try {
+                     getBookData();
                      bookIoOperation.saveBookObject(book);
                      Constant.showMessage("Book added successfully", addPageFrame);
                      clearData();
@@ -257,5 +337,86 @@ public class AddPageCtrl implements ActionListener, DocumentListener {
               priceOfBookField.setText("0");
               totalQuantityField.setText("0");
               dateOfPublicationField.setText("");
+       }
+
+       @Override
+       public void itemStateChanged(ItemEvent e) {
+              if (e.getStateChange() == ItemEvent.SELECTED) {
+                     String mode = e.getItem().toString();
+                     doModeAction(mode);
+              }
+       }
+
+       private void doModeAction(String mode) {
+              if (mode.equals("Update Mode")) {
+                     bookIdField.setText("");
+                     bookIdField.setEditable(true);
+                     deleteButton.setVisible(true);
+                     updateButton.setVisible(true);
+                     submitBtn.setVisible(false);
+                     backButton.setVisible(false);
+              } else {
+                     clearData();
+                     deleteButton.setVisible(false);
+                     updateButton.setVisible(false);
+                     submitBtn.setVisible(true);
+                     backButton.setVisible(true);
+              }
+       }
+
+       private void setData() {
+              bookIdField.setText(book.getBookId());
+              bookNameField.setText(book.getBookName());
+              authorNamesField.setText(book.getAuthorNames());
+              publicationField.setText(book.getPublication());
+              priceOfBookField.setText(book.getPriceOfBook() + "");
+              totalQuantityField.setText(book.getTotalQuantityToOrder() + "");
+              dateOfPublicationField.setText(Validation.dateFormatString(book.getDateOfPublication()));
+       }
+
+       @Override
+       public void mouseClicked(MouseEvent e) {
+              // TODO Auto-generated method stub
+              // throw new UnsupportedOperationException("Unimplemented method
+              // 'mouseClicked'");
+              JTable target = (JTable) e.getSource();
+              int row = target.getSelectedRow();
+              int column = target.getSelectedColumn();
+              String bookId = (String) target.getModel().getValueAt(row, 0);
+              List<Book> books = bookIoOperation.getBooks();
+              Book book = Constant.getBookDataFromField(books, "Book ID", bookId);
+              if (book != null) {
+                     modeDropdown.setSelectedIndex(1);
+                     this.book = book;
+                     setData();
+              }
+       }
+
+       @Override
+       public void mousePressed(MouseEvent e) {
+              // TODO Auto-generated method stub
+              // throw new UnsupportedOperationException("Unimplemented method
+              // 'mousePressed'");
+       }
+
+       @Override
+       public void mouseReleased(MouseEvent e) {
+              // TODO Auto-generated method stub
+              // throw new UnsupportedOperationException("Unimplemented method
+              // 'mouseReleased'");
+       }
+
+       @Override
+       public void mouseEntered(MouseEvent e) {
+              // TODO Auto-generated method stub
+              // throw new UnsupportedOperationException("Unimplemented method
+              // 'mouseEntered'");
+       }
+
+       @Override
+       public void mouseExited(MouseEvent e) {
+              // TODO Auto-generated method stub
+              // throw new UnsupportedOperationException("Unimplemented method
+              // 'mouseExited'");
        }
 }
